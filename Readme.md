@@ -5,7 +5,9 @@
 3.搭建了server
 4.可以在web页面买入btc/usdt和卖出
 
-包含两个文件：trade_server_en 和 trade_interface_en
+包含四个个文件：
+trade_en.py和trade2_en.py是两个前期测试的
+trade_server_en 和 trade_interface_en 这两个是包含web服务器的。
 
 开启server后开5001端口，在http://localhost:5001/ 就可以访问和操作。
 
