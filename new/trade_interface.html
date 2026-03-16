@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC/USDT 交易界面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .info-value {
+            color: #333;
+        }
+        .trade-section {
+            display: flex;
+            gap: 20px;
+        }
+        .trade-box {
+            flex: 1;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .buy-box {
+            background-color: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+        .sell-box {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+        }
+        .trade-button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .buy-button {
+            background-color: #4caf50;
+            color: white;
+        }
+        .buy-button:hover {
+            background-color: #45a049;
+        }
+        .sell-button {
+            background-color: #f44336;
+            color: white;
+        }
+        .sell-button:hover {
+            background-color: #da190b;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .loading::after {
+            content: "...";
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% {
+                color: rgba(0,0,0,0);
+                text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);
+            }
+            40% {
+                color: #333;
+                text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0);
+            }
+            60% {
+                text-shadow: .25em 0 0 #333, .5em 0 0 rgba(0,0,0,0);
+            }
+            80%, 100% {
+                text-shadow: .25em 0 0 #333, .5em 0 0 #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BTC/USDT 交易界面</h1>
+
+        <div class="section">
+            <h2>账户信息</h2>
+            <div class="info-item">
+                <span class="info-label">USDT 余额:</span>
+                <span class="info-value" id="usdt-balance">加载中...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">BTC 余额:</span>
+                <span class="info-value" id="btc-balance">加载中...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">BTC/USDT 当前价格:</span>
+                <span class="info-value" id="current-price">加载中...</span>
+            </div>
+            <button onclick="refreshAccountInfo()" style="width: 100%; padding: 10px; margin-top: 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">刷新账户信息</button>
+        </div>
+
+        <div class="section">
+            <h2>交易操作</h2>
+            <div class="trade-section">
+                <div class="trade-box buy-box">
+                    <h3 style="color: #2e7d32; margin-top: 0;">买入 BTC</h3>
+                    <input type="number" id="buy-amount" placeholder="输入买入数量 (BTC)" step="0.000001" min="0.000001">
+                    <input type="number" id="buy-usdt-amount" placeholder="或输入 USDT 金额" step="0.01" min="0.01">
+                    <button class="trade-button buy-button" onclick="buyBTC()">买入 BTC</button>
+                    <div class="loading" id="buy-loading"></div>
+                </div>
+
+                <div class="trade-box sell-box">
+                    <h3 style="color: #c62828; margin-top: 0;">卖出 BTC</h3>
+                    <input type="number" id="sell-amount" placeholder="输入卖出数量 (BTC)" step="0.000001" min="0.000001">
+                    <button class="trade-button sell-button" onclick="sellBTC()">卖出 BTC</button>
+                    <div class="loading" id="sell-loading"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // API 配置
+        const API_CONFIG = {
+            apiKey: "8IRAEyYeSeChN3wYPFZFS8f7xLzK4xwLn1uM3Vhdb7RhMBrkGRuTf61BZCRwH4Xh",
+            secretKey: "qCJEZniuc6Rsy9XzDFC2DJn9iY8cFtSvPwQbsbJmuqH5JQ4z3AJ9fb94RM6vhOFG",
+            testnet: true,
+            symbol: "BTCUSDT"
+        };
+
+        // 初始化
+        window.onload = function() {
+            refreshAccountInfo();
+        };
+
+        // 刷新账户信息
+        async function refreshAccountInfo() {
+            try {
+                const response = await fetch('/api/account-info');
+                const data = await response.json();
+                document.getElementById('usdt-balance').textContent = data.usdt_balance.toFixed(2) + ' USDT';
+                document.getElementById('btc-balance').textContent = data.btc_balance.toFixed(8) + ' BTC';
+                document.getElementById('current-price').textContent = data.current_price.toFixed(2) + ' USDT';
+            } catch (error) {
+                showStatus('获取账户信息失败: ' + error.message, 'error');
+            }
+        }
+
+        // 买入 BTC
+        async function buyBTC() {
+            const amount = document.getElementById('buy-amount').value;
+            const usdtAmount = document.getElementById('buy-usdt-amount').value;
+
+            if (!amount && !usdtAmount) {
+                showStatus('请输入买入数量或 USDT 金额', 'error');
+                return;
+            }
+
+            showLoading('buy-loading', true);
+            showStatus('', '');
+
+            try {
+                const payload = {
+                    symbol: API_CONFIG.symbol,
+                    testnet: API_CONFIG.testnet
+                };
+
+                if (usdtAmount) {
+                    const response = await fetch('/api/buy-with-usdt', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ...payload,
+                            usdtAmount: parseFloat(usdtAmount)
+                        })
+                    });
+                    const result = await response.json();
+                    showStatus(result.message, result.success ? 'success' : 'error');
+                } else {
+                    const response = await fetch('/api/buy', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ...payload,
+                            quantity: parseFloat(amount)
+                        })
+                    });
+                    const result = await response.json();
+                    showStatus(result.message, result.success ? 'success' : 'error');
+                }
+
+                // 清空输入框
+                document.getElementById('buy-amount').value = '';
+                document.getElementById('buy-usdt-amount').value = '';
+
+                // 刷新账户信息
+                setTimeout(refreshAccountInfo, 2000);
+            } catch (error) {
+                showStatus('买入失败: ' + error.message, 'error');
+            } finally {
+                showLoading('buy-loading', false);
+            }
+        }
+
+        // 卖出 BTC
+        async function sellBTC() {
+            const amount = document.getElementById('sell-amount').value;
+
+            if (!amount) {
+                showStatus('请输入卖出数量', 'error');
+                return;
+            }
+
+            showLoading('sell-loading', true);
+            showStatus('', '');
+
+            try {
+                const response = await fetch('/api/sell', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symbol: API_CONFIG.symbol,
+                        testnet: API_CONFIG.testnet,
+                        quantity: parseFloat(amount)
+                    })
+                });
+                const result = await response.json();
+                showStatus(result.message, result.success ? 'success' : 'error');
+
+                // 清空输入框
+                document.getElementById('sell-amount').value = '';
+
+                // 刷新账户信息
+                setTimeout(refreshAccountInfo, 2000);
+            } catch (error) {
+                showStatus('卖出失败: ' + error.message, 'error');
+            } finally {
+                showLoading('sell-loading', false);
+            }
+        }
+
+        // 显示状态信息
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.style.display = message ? 'block' : 'none';
+        }
+
+        // 显示/隐藏加载状态
+        function showLoading(id, show) {
+            document.getElementById(id).style.display = show ? 'block' : 'none';
+        }
+
+        // 自动计算买入金额
+        document.getElementById('buy-usdt-amount').addEventListener('input', function() {
+            if (this.value) {
+                const usdtAmount = parseFloat(this.value);
+                const price = parseFloat(document.getElementById('current-price').textContent);
+                if (price > 0) {
+                    const btcAmount = usdtAmount / price;
+                    document.getElementById('buy-amount').value = btcAmount.toFixed(8);
+                }
+            }
+        });
+
+        // 自动计算 USDT 金额
+        document.getElementById('buy-amount').addEventListener('input', function() {
+            if (this.value) {
+                const btcAmount = parseFloat(this.value);
+                const price = parseFloat(document.getElementById('current-price').textContent);
+                if (price > 0) {
+                    const usdtAmount = btcAmount * price;
+                    document.getElementById('buy-usdt-amount').value = usdtAmount.toFixed(2);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
